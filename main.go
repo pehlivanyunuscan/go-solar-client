@@ -86,6 +86,46 @@ func main() {
 		json.NewEncoder(w).Encode(resp)
 	})
 
+	http.HandleFunc("/run-with-env", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Only POST method is allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		// Get the session ID from the query parameters
+		sessionID := r.URL.Query().Get("session_id")
+		if sessionID == "" {
+			http.Error(w, "session_id query parameter is required", http.StatusBadRequest)
+			return
+		}
+
+		// Parse the request body into a map for overrides
+		var override map[string]interface{}
+		// Read the request body
+		bodyBytes, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to read request body: %v", err), http.StatusBadRequest)
+			return
+		}
+		if len(bodyBytes) > 0 {
+			if err := json.Unmarshal(bodyBytes, &override); err != nil {
+				http.Error(w, "Invalid JSON body", http.StatusBadRequest)
+				return
+			}
+		}
+		resp, err := endpoints.RunWithEnv(apiUrl, sessionID, override)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("RunWithEnv failed: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			http.Error(w, fmt.Sprintf("Failed to encode response: %v", err), http.StatusInternalServerError)
+			return
+		}
+	})
+
 	fmt.Println("Starting server on :8888")
 	http.ListenAndServe(":8888", nil)
 }
