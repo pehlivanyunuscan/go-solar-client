@@ -126,6 +126,20 @@ func main() {
 		}
 	})
 
+	http.HandleFunc("/sample-env", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Only GET method is allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		resp, err := endpoints.GetSampleEnv(apiUrl)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to get sample env: %v", err), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp)
+	})
+
 	fmt.Println("Starting server on :8888")
 	http.ListenAndServe(":8888", nil)
 }
