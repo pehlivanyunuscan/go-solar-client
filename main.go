@@ -140,6 +140,21 @@ func main() {
 		json.NewEncoder(w).Encode(resp)
 	})
 
+	http.HandleFunc("/sessions", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			http.Error(w, "Only GET method is allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		sessions, err := endpoints.GetSessions(apiUrl)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to get sessions: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(sessions)
+	})
+
 	fmt.Println("Starting server on :8888")
 	http.ListenAndServe(":8888", nil)
 }
