@@ -155,6 +155,28 @@ func main() {
 		json.NewEncoder(w).Encode(sessions)
 	})
 
+	http.HandleFunc("/sessions/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodDelete {
+			http.Error(w, "Only DELETE method is allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		sessionID := r.URL.Path[len("/sessions/"):]
+		if sessionID == "" {
+			http.Error(w, "session_id query parameter is required", http.StatusBadRequest)
+			return
+		}
+		err := endpoints.DeleteSession(apiUrl, sessionID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to delete session: %v", err), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "Session deleted successfully",
+			"status":  "success",
+		})
+	})
+
 	fmt.Println("Starting server on :8888")
 	http.ListenAndServe(":8888", nil)
 }
