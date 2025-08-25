@@ -6,10 +6,12 @@ import (
 	"go-solar-client/endpoints"
 	"io"
 	"net/http"
+	"os"
 )
 
 func main() {
-	apiUrl := "http://10.67.67.25:4545"
+	// apiUrl := "http://10.67.67.25:4545"
+	apiUrl := "http://localhost:4545"
 
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		health, err := endpoints.CheckHealth(apiUrl)
@@ -53,6 +55,35 @@ func main() {
 			http.Error(w, fmt.Sprintf("Failed to encode response: %v", err), http.StatusInternalServerError)
 			return
 		}
+	})
+
+	http.HandleFunc("/upload-env", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Only POST method is allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		// .env dosya yolunu query parametresi olarak al
+		envFile := r.URL.Query().Get("envfile")
+		if envFile == "" {
+			http.Error(w, "envfile query parameter is required", http.StatusBadRequest)
+			return
+		}
+
+		// Dosyanın var olup olmadığını kontrol et
+		if _, err := os.Stat(envFile); os.IsNotExist(err) {
+			http.Error(w, fmt.Sprintf("File does not exist: %s", envFile), http.StatusBadRequest)
+			return
+		}
+
+		resp, err := endpoints.UploadEnvFile(apiUrl, envFile)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to upload .env file: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(resp)
 	})
 
 	fmt.Println("Starting server on :8888")
