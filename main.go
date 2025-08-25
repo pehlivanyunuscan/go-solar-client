@@ -86,16 +86,16 @@ func main() {
 		json.NewEncoder(w).Encode(resp)
 	})
 
-	http.HandleFunc("/run-with-env", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/run-with-env/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Only POST method is allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		// Get the session ID from the query parameters
-		sessionID := r.URL.Query().Get("session_id")
+		// Get the session ID from the URL path
+		sessionID := r.URL.Path[len("/run-with-env/"):]
 		if sessionID == "" {
-			http.Error(w, "session_id query parameter is required", http.StatusBadRequest)
+			http.Error(w, "session_id is required", http.StatusBadRequest)
 			return
 		}
 
