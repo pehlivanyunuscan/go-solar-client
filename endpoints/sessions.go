@@ -7,16 +7,35 @@ import (
 	"net/http"
 )
 
+// SessionInfo contains information about a session
+// swagger:model SessionInfo
 type SessionInfo struct {
+	// Original filename of uploaded env file
+	// example: production.env
 	OriginalFilename string `json:"original_filename"`
-	UploadTime       string `json:"upload_time"`
-	VariablesCount   int    `json:"variables_count"`
+
+	// Upload time
+	// example: 2025-08-26T10:30:00Z
+	UploadTime string `json:"upload_time"`
+
+	// Number of variables in the session
+	// example: 15
+	VariablesCount int `json:"variables_count"`
 }
 
+// SessionsResponse represents the response for listing sessions
+// swagger:model SessionsResponse
 type SessionsResponse struct {
-	ActiveSessions int                    `json:"active_sessions"`
-	Sessions       map[string]SessionInfo `json:"sessions"`
-	Status         string                 `json:"status"`
+	// Response status
+	// example: success
+	Status string `json:"status"`
+
+	// Number of active sessions
+	// example: 3
+	ActiveSessions int `json:"active_sessions"`
+
+	// Map of session ID to session info
+	Sessions map[string]SessionInfo `json:"sessions"`
 }
 
 func GetSessions(apiUrl string) (*SessionsResponse, error) {

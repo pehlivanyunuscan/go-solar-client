@@ -8,13 +8,20 @@ import (
 )
 
 // HealthResponse represents the structure of the health check response.
+// swagger:model HealthResponse
 type HealthResponse struct {
+	// Service name
+	// example: Solar Forecasting API
 	Service string `json:"service"`
-	Status  string `json:"status"`
-}
 
-// CheckHealth sends a health check request to the specified API URL and returns the health status.
-// It returns a HealthResponse and an error if any occurs.
+	// Service status
+	// example: healthy
+	Status string `json:"status"`
+
+	// Health check timestamp
+	// example: 2025-08-26T10:30:00Z
+	Timestamp string `json:"timestamp,omitempty"`
+}
 
 func CheckHealth(apiUrl string) (*HealthResponse, error) {
 	client := &http.Client{}

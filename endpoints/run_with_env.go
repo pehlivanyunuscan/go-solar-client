@@ -8,11 +8,23 @@ import (
 	"net/http"
 )
 
+// RunWithEnvResponse represents the response from running forecast with env
+// swagger:model RunWithEnvResponse
 type RunWithEnvResponse struct {
-	Result    map[string]interface{} `json:"result"`
-	SessionID string                 `json:"session_id"`
-	Status    string                 `json:"status"`
-	Timestamp string                 `json:"timestamp"`
+	// Status of the operation
+	// example: success
+	Status string `json:"status"`
+
+	// Session ID used for this run
+	// example: abc123def456
+	SessionID string `json:"session_id"`
+
+	// Result data from the forecast
+	Result map[string]interface{} `json:"result,omitempty"`
+
+	// Timestamp of the operation
+	// example: 2025-08-26T10:30:00Z
+	Timestamp string `json:"timestamp,omitempty"`
 }
 
 func RunWithEnv(apiUrl, sessionID string, override map[string]interface{}) (*RunWithEnvResponse, error) {

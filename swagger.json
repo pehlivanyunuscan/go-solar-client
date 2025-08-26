@@ -1,0 +1,606 @@
+{
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "description": "# Documentation for Solar Power Forecasting API\n\nThe purpose of this application is to provide a REST API for solar power forecasting",
+    "title": "Solar Power Forecasting API",
+    "contact": {
+      "name": "Solar API Team",
+      "email": "support@solar-api.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    },
+    "version": "1.0.0"
+  },
+  "host": "localhost:8888",
+  "basePath": "/",
+  "paths": {
+    "/health": {
+      "get": {
+        "description": "Returns the health status of the forecasting service",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "health"
+        ],
+        "summary": "Check service health",
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "schema": {
+              "$ref": "#/definitions/HealthResponse"
+            }
+          },
+          "500": {
+            "description": "Service is unhealthy",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/run": {
+      "post": {
+        "description": "Run a solar power forecast with the provided parameters",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "forecast"
+        ],
+        "summary": "Run solar power forecast",
+        "operationId": "runForecast",
+        "parameters": [
+          {
+            "description": "Forecast parameters",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RunRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Forecast completed successfully",
+            "schema": {
+              "$ref": "#/definitions/RunResponse"
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/run-with-env/{sessionID}": {
+      "post": {
+        "description": "Run forecast using a previously uploaded environment session",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "forecast"
+        ],
+        "summary": "Run forecast with environment session",
+        "operationId": "runWithEnv",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Session ID from uploaded environment",
+            "name": "sessionID",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Optional parameter overrides",
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Forecast completed successfully",
+            "schema": {
+              "$ref": "#/definitions/RunWithEnvResponse"
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/sample-env": {
+      "get": {
+        "description": "Returns a sample environment configuration",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "environment"
+        ],
+        "summary": "Get sample environment",
+        "operationId": "getSampleEnv",
+        "responses": {
+          "200": {
+            "description": "Sample environment configuration",
+            "schema": {
+              "$ref": "#/definitions/SampleEnvResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/sessions": {
+      "get": {
+        "description": "Returns a list of all active environment sessions",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "sessions"
+        ],
+        "summary": "List all sessions",
+        "operationId": "listSessions",
+        "responses": {
+          "200": {
+            "description": "List of sessions",
+            "schema": {
+              "$ref": "#/definitions/SessionsResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/sessions/{sessionID}": {
+      "delete": {
+        "description": "Delete a specific environment session by ID",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "sessions"
+        ],
+        "summary": "Delete a session",
+        "operationId": "deleteSession",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Session ID to delete",
+            "name": "sessionID",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session deleted successfully",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/upload-env": {
+      "post": {
+        "description": "Upload a .env file to create a session",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "environment"
+        ],
+        "summary": "Upload environment file",
+        "operationId": "uploadEnv",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "Path to the environment file",
+            "name": "envfile",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "File uploaded successfully",
+            "schema": {
+              "$ref": "#/definitions/UploadEnvResponse"
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "description": "Error message",
+          "type": "string",
+          "x-go-name": "Error",
+          "example": "An error occurred"
+        },
+        "timestamp": {
+          "description": "Error timestamp",
+          "type": "string",
+          "x-go-name": "Timestamp",
+          "example": "2025-08-26T10:30:00Z"
+        }
+      },
+      "x-go-package": "go-solar-client"
+    },
+    "HealthResponse": {
+      "type": "object",
+      "title": "HealthResponse represents the structure of the health check response.",
+      "properties": {
+        "service": {
+          "description": "Service name",
+          "type": "string",
+          "x-go-name": "Service",
+          "example": "Solar Forecasting API"
+        },
+        "status": {
+          "description": "Service status",
+          "type": "string",
+          "x-go-name": "Status",
+          "example": "healthy"
+        },
+        "timestamp": {
+          "description": "Health check timestamp",
+          "type": "string",
+          "x-go-name": "Timestamp",
+          "example": "2025-08-26T10:30:00Z"
+        }
+      },
+      "x-go-package": "go-solar-client/endpoints"
+    },
+    "RunRequest": {
+      "type": "object",
+      "title": "RunRequest represents the structure of the request body for running a forecast.",
+      "required": [
+        "PROMETHEUS_URL",
+        "METRIC_NAME",
+        "TRAIN_DAYS"
+      ],
+      "properties": {
+        "BATTERY_CAPACITY_WH": {
+          "description": "Battery capacity in Wh",
+          "type": "number",
+          "format": "double",
+          "x-go-name": "BatteryCapacityWh",
+          "example": 5000
+        },
+        "CHARGE_EFFICIENCY": {
+          "description": "Charge efficiency",
+          "type": "number",
+          "format": "double",
+          "x-go-name": "ChargeEfficiency",
+          "example": 0.9
+        },
+        "CONSTANT_LOAD_W": {
+          "description": "Constant load in Watts",
+          "type": "number",
+          "format": "double",
+          "x-go-name": "ConstantLoadW",
+          "example": 100
+        },
+        "DETAILED_SUMMARY": {
+          "description": "Whether to include detailed summary",
+          "type": "boolean",
+          "x-go-name": "DetailedSummary",
+          "example": true
+        },
+        "DISCHARGE_EFFICIENCY": {
+          "description": "Discharge efficiency",
+          "type": "number",
+          "format": "double",
+          "x-go-name": "DischargeEfficiency",
+          "example": 0.9
+        },
+        "INITIAL_SOC_PERCENT": {
+          "description": "Initial SOC percentage",
+          "type": "number",
+          "format": "double",
+          "x-go-name": "InitialSocPercent",
+          "example": 80
+        },
+        "METRIC_NAME": {
+          "description": "The metric name to query from Prometheus",
+          "type": "string",
+          "x-go-name": "MetricName",
+          "example": "solar_power"
+        },
+        "PROMETHEUS_URL": {
+          "description": "The Prometheus URL to fetch data from",
+          "type": "string",
+          "x-go-name": "PrometheusURL",
+          "example": "http://localhost:9090"
+        },
+        "TRAIN_DAYS": {
+          "description": "Number of days to use for training",
+          "type": "integer",
+          "format": "int64",
+          "minimum": 1,
+          "x-go-name": "TrainDays",
+          "example": 7
+        },
+        "USE_CYTHON": {
+          "description": "Whether to use Cython",
+          "type": "boolean",
+          "x-go-name": "UseCython",
+          "example": true
+        }
+      },
+      "x-go-package": "go-solar-client/endpoints"
+    },
+    "RunResponse": {
+      "description": "RunResponse represents the response from running a forecast",
+      "type": "object",
+      "properties": {
+        "message": {
+          "description": "Message from the operation",
+          "type": "string",
+          "x-go-name": "Message",
+          "example": "Forecast completed successfully"
+        },
+        "result": {
+          "description": "Result data",
+          "type": "object",
+          "additionalProperties": {},
+          "x-go-name": "Result"
+        },
+        "status": {
+          "description": "Status of the operation",
+          "type": "string",
+          "x-go-name": "Status",
+          "example": "success"
+        },
+        "timestamp": {
+          "description": "Timestamp of the operation",
+          "type": "string",
+          "x-go-name": "Timestamp",
+          "example": "2025-08-26T10:30:00Z"
+        }
+      },
+      "x-go-package": "go-solar-client/endpoints"
+    },
+    "RunWithEnvResponse": {
+      "description": "RunWithEnvResponse represents the response from running forecast with env",
+      "type": "object",
+      "properties": {
+        "result": {
+          "description": "Result data from the forecast",
+          "type": "object",
+          "additionalProperties": {},
+          "x-go-name": "Result"
+        },
+        "session_id": {
+          "description": "Session ID used for this run",
+          "type": "string",
+          "x-go-name": "SessionID",
+          "example": "abc123def456"
+        },
+        "status": {
+          "description": "Status of the operation",
+          "type": "string",
+          "x-go-name": "Status",
+          "example": "success"
+        },
+        "timestamp": {
+          "description": "Timestamp of the operation",
+          "type": "string",
+          "x-go-name": "Timestamp",
+          "example": "2025-08-26T10:30:00Z"
+        }
+      },
+      "x-go-package": "go-solar-client/endpoints"
+    },
+    "SampleEnvResponse": {
+      "description": "SampleEnvResponse represents the response for sample environment",
+      "type": "object",
+      "properties": {
+        "description": {
+          "description": "Description of the sample environment",
+          "type": "string",
+          "x-go-name": "Description",
+          "example": "Sample environment configuration for solar forecasting"
+        },
+        "sample_env_content": {
+          "description": "Sample environment file content",
+          "type": "string",
+          "x-go-name": "SampleEnvContent"
+        },
+        "status": {
+          "description": "Response status",
+          "type": "string",
+          "x-go-name": "Status",
+          "example": "success"
+        }
+      },
+      "x-go-package": "go-solar-client/endpoints"
+    },
+    "SessionInfo": {
+      "description": "SessionInfo contains information about a session",
+      "type": "object",
+      "properties": {
+        "original_filename": {
+          "description": "Original filename of uploaded env file",
+          "type": "string",
+          "x-go-name": "OriginalFilename",
+          "example": "production.env"
+        },
+        "upload_time": {
+          "description": "Upload time",
+          "type": "string",
+          "x-go-name": "UploadTime",
+          "example": "2025-08-26T10:30:00Z"
+        },
+        "variables_count": {
+          "description": "Number of variables in the session",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "VariablesCount",
+          "example": 15
+        }
+      },
+      "x-go-package": "go-solar-client/endpoints"
+    },
+    "SessionsResponse": {
+      "description": "SessionsResponse represents the response for listing sessions",
+      "type": "object",
+      "properties": {
+        "active_sessions": {
+          "description": "Number of active sessions",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ActiveSessions",
+          "example": 3
+        },
+        "sessions": {
+          "description": "Map of session ID to session info",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/SessionInfo"
+          },
+          "x-go-name": "Sessions"
+        },
+        "status": {
+          "description": "Response status",
+          "type": "string",
+          "x-go-name": "Status",
+          "example": "success"
+        }
+      },
+      "x-go-package": "go-solar-client/endpoints"
+    },
+    "UploadEnvResponse": {
+      "description": "UploadEnvResponse response structure for upload env file",
+      "type": "object",
+      "properties": {
+        "message": {
+          "description": "Response message",
+          "type": "string",
+          "x-go-name": "Message",
+          "example": "Environment file uploaded successfully"
+        },
+        "session_id": {
+          "description": "Session ID created for this upload",
+          "type": "string",
+          "x-go-name": "SessionID",
+          "example": "abc123def456"
+        },
+        "status": {
+          "description": "Status of the upload",
+          "type": "string",
+          "x-go-name": "Status",
+          "example": "success"
+        },
+        "variables": {
+          "description": "List of environment variables found",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Variables"
+        },
+        "variables_count": {
+          "description": "Number of variables found",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "VariablesCount",
+          "example": 10
+        }
+      },
+      "x-go-package": "go-solar-client/endpoints"
+    }
+  }
+}

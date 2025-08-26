@@ -10,13 +10,27 @@ import (
 	"os"
 )
 
-// response structure for upload env file
+// UploadEnvResponse response structure for upload env file
+// swagger:model UploadEnvResponse
 type UploadEnvResponse struct {
-	Message        string   `json:"message"`
-	SessionID      string   `json:"session_id"`
-	Status         string   `json:"status"`
-	Variables      []string `json:"variables"`
-	VariablesCount int      `json:"variables_count"`
+	// Response message
+	// example: Environment file uploaded successfully
+	Message string `json:"message"`
+
+	// Session ID created for this upload
+	// example: abc123def456
+	SessionID string `json:"session_id"`
+
+	// Status of the upload
+	// example: success
+	Status string `json:"status"`
+
+	// List of environment variables found
+	Variables []string `json:"variables"`
+
+	// Number of variables found
+	// example: 10
+	VariablesCount int `json:"variables_count"`
 }
 
 // UploadEnvFile verilen env dosyasını /upload-env endpointine yükler ve yanıtı döner.

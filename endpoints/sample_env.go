@@ -7,10 +7,19 @@ import (
 	"net/http"
 )
 
+// SampleEnvResponse represents the response for sample environment
+// swagger:model SampleEnvResponse
 type SampleEnvResponse struct {
-	Description      string `json:"description"`
+	// Response status
+	// example: success
+	Status string `json:"status"`
+
+	// Description of the sample environment
+	// example: Sample environment configuration for solar forecasting
+	Description string `json:"description"`
+
+	// Sample environment file content
 	SampleEnvContent string `json:"sample_env_content"`
-	Status           string `json:"status"`
 }
 
 func GetSampleEnv(apiUrl string) (*SampleEnvResponse, error) {
