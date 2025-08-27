@@ -23,6 +23,7 @@
     "version": "1.0.0"
   },
   "host": "localhost:8888",
+  "servers":[{"url":"http://10.67.67.22:8888","description":"Local Development Server"}],
   "basePath": "/",
   "paths": {
     "/health": {
