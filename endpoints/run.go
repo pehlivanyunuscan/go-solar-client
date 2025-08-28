@@ -18,7 +18,7 @@ type RunRequest struct {
 
 	// The metric name to query from Prometheus
 	// required: true
-	// example: solar_power
+	// example: mppt_values{sensor="panel gucu"}
 	MetricName string `json:"METRIC_NAME"`
 
 	// Number of days to use for training
