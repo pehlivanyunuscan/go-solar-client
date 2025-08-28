@@ -27,7 +27,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"time"
 )
 
 func main() {
@@ -52,19 +51,9 @@ func main() {
 	//     schema:
 	//       $ref: "#/definitions/ErrorResponse"
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-
 		health, err := endpoints.CheckHealth(apiUrl)
 		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error":     fmt.Sprintf("Health check failed: %v", err),
-				"timestamp": time.Now().UTC().Format(time.RFC3339),
-			})
+			http.Error(w, fmt.Sprintf("Health check failed: %v", err), http.StatusInternalServerError)
 			return
 		}
 
@@ -107,41 +96,24 @@ func main() {
 	//       $ref: "#/definitions/ErrorResponse"
 	http.HandleFunc("/run", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": "Only POST method is allowed",
-			})
+			http.Error(w, "Only POST method is allowed", http.StatusMethodNotAllowed)
 			return
 		}
-
+		// Parse the request body into a RunRequest struct
 		var req endpoints.RunRequest
+		// Read the request body
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": fmt.Sprintf("Failed to read request body: %v", err),
-			})
+			http.Error(w, fmt.Sprintf("Failed to read request body: %v", err), http.StatusBadRequest)
 			return
 		}
-
 		if err := json.Unmarshal(body, &req); err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": fmt.Sprintf("Failed to parse JSON: %v", err),
-			})
+			http.Error(w, fmt.Sprintf("Failed to parse request body: %v", err), http.StatusBadRequest)
 			return
 		}
-
 		resp, err := endpoints.RunForecast(apiUrl, &req)
 		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": fmt.Sprintf("Failed to run forecast: %v", err),
-			})
+			http.Error(w, fmt.Sprintf("Failed to run forecast: %v", err), http.StatusInternalServerError)
 			return
 		}
 
@@ -181,40 +153,26 @@ func main() {
 	//       $ref: "#/definitions/ErrorResponse"
 	http.HandleFunc("/upload-env", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": "Only POST method is allowed",
-			})
+			http.Error(w, "Only POST method is allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
+		// .env dosya yolunu query parametresi olarak al
 		envFile := r.URL.Query().Get("envfile")
 		if envFile == "" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": "envfile query parameter is required",
-			})
+			http.Error(w, "envfile query parameter is required", http.StatusBadRequest)
 			return
 		}
 
+		// Dosyanın var olup olmadığını kontrol et
 		if _, err := os.Stat(envFile); os.IsNotExist(err) {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": fmt.Sprintf("File does not exist: %s", envFile),
-			})
+			http.Error(w, fmt.Sprintf("File does not exist: %s", envFile), http.StatusBadRequest)
 			return
 		}
 
 		resp, err := endpoints.UploadEnvFile(apiUrl, envFile)
 		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": fmt.Sprintf("Failed to upload .env file: %v", err),
-			})
+			http.Error(w, fmt.Sprintf("Failed to upload .env file: %v", err), http.StatusInternalServerError)
 			return
 		}
 
@@ -258,53 +216,34 @@ func main() {
 	//       $ref: "#/definitions/ErrorResponse"
 	http.HandleFunc("/run-with-env/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": "Only POST method is allowed",
-			})
+			http.Error(w, "Only POST method is allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
+		// Get the session ID from the URL path
 		sessionID := r.URL.Path[len("/run-with-env/"):]
 		if sessionID == "" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": "session_id is required in path",
-			})
+			http.Error(w, "session_id is required", http.StatusBadRequest)
 			return
 		}
 
+		// Parse the request body into a map for overrides
 		var override map[string]interface{}
+		// Read the request body
 		bodyBytes, err := io.ReadAll(r.Body)
 		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": fmt.Sprintf("Failed to read request body: %v", err),
-			})
+			http.Error(w, fmt.Sprintf("Failed to read request body: %v", err), http.StatusBadRequest)
 			return
 		}
-
 		if len(bodyBytes) > 0 {
 			if err := json.Unmarshal(bodyBytes, &override); err != nil {
-				w.Header().Set("Content-Type", "application/json")
-				w.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(w).Encode(map[string]string{
-					"error": "Invalid JSON body",
-				})
+				http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 				return
 			}
 		}
-
 		resp, err := endpoints.RunWithEnv(apiUrl, sessionID, override)
 		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": fmt.Sprintf("RunWithEnv failed: %v", err),
-			})
+			http.Error(w, fmt.Sprintf("RunWithEnv failed: %v", err), http.StatusInternalServerError)
 			return
 		}
 
@@ -334,24 +273,14 @@ func main() {
 	//       $ref: "#/definitions/ErrorResponse"
 	http.HandleFunc("/sample-env", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": "Only GET method is allowed",
-			})
+			http.Error(w, "Only GET method is allowed", http.StatusMethodNotAllowed)
 			return
 		}
-
 		resp, err := endpoints.GetSampleEnv(apiUrl)
 		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": fmt.Sprintf("Failed to get sample env: %v", err),
-			})
+			http.Error(w, fmt.Sprintf("Failed to get sample env: %v", err), http.StatusInternalServerError)
 			return
 		}
-
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)
 	})
@@ -375,21 +304,12 @@ func main() {
 	//       $ref: "#/definitions/ErrorResponse"
 	http.HandleFunc("/sessions", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": "Only GET method is allowed",
-			})
+			http.Error(w, "Only GET method is allowed", http.StatusMethodNotAllowed)
 			return
 		}
-
 		sessions, err := endpoints.GetSessions(apiUrl)
 		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": fmt.Sprintf("Failed to get sessions: %v", err),
-			})
+			http.Error(w, fmt.Sprintf("Failed to get sessions: %v", err), http.StatusInternalServerError)
 			return
 		}
 
@@ -431,39 +351,23 @@ func main() {
 	//       $ref: "#/definitions/ErrorResponse"
 	http.HandleFunc("/sessions/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodDelete {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": "Only DELETE method is allowed",
-			})
+			http.Error(w, "Only DELETE method is allowed", http.StatusMethodNotAllowed)
 			return
 		}
-
 		sessionID := r.URL.Path[len("/sessions/"):]
 		if sessionID == "" {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": "session_id is required in path",
-			})
+			http.Error(w, "session_id query parameter is required", http.StatusBadRequest)
 			return
 		}
-
 		err := endpoints.DeleteSession(apiUrl, sessionID)
 		if err != nil {
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusInternalServerError)
-			json.NewEncoder(w).Encode(map[string]string{
-				"error": fmt.Sprintf("Failed to delete session: %v", err),
-			})
+			http.Error(w, fmt.Sprintf("Failed to delete session: %v", err), http.StatusInternalServerError)
 			return
 		}
-
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{
-			"message":   "Session deleted successfully",
-			"status":    "success",
-			"timestamp": time.Now().UTC().Format(time.RFC3339),
+			"message": "Session deleted successfully",
+			"status":  "success",
 		})
 	})
 
