@@ -30,8 +30,14 @@ import (
 )
 
 func main() {
-	// apiUrl := "http://10.67.67.25:4545"
-	apiUrl := "http://localhost:4545"
+	apiUrl := os.Getenv("API_URL")
+	if apiUrl == "" {
+		apiUrl = "http://localhost:4545"
+	}
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8888"
+	}
 
 	// swagger:operation GET /health health healthCheck
 	// ---
@@ -435,7 +441,7 @@ window.onload = function() {
 	fmt.Println("📄 Swagger JSON: http://localhost:8888/swagger.json")
 	fmt.Println("💚 Health Check: http://localhost:8888/health")
 
-	http.ListenAndServe(":8888", nil)
+	http.ListenAndServe(":"+port, nil)
 }
 
 // Swagger model definitions for responses

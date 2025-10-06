@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  go-solar-client:
+    build: .
+    container_name: go-solar-client
+    ports:
+      - "8888:8888"
+    environment:
+      - PORT=8888
+      - API_URL=http://localhost:4545
+    volumes:
+      - ./swagger.json:/root/swagger.json:ro
+    restart: unless-stopped
+    networks:
+      - solar-network
+
+networks:
+  solar-network:
+    driver: bridge
